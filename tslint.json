@@ -1,0 +1,16 @@
+{
+    "defaultSeverity": "error",
+    "extends": ["tslint:recommended", "tslint-config-prettier"],
+
+    "jsRules": {},
+    "rules": {
+        "quotemark": [true, "single"],
+        "no-shadowed-variable": false
+    },
+    "rulesDirectory": [],
+    "linterOptions": {
+        "exclude": [
+            "src/db/migrations/**.ts"
+        ]
+    }
+}
