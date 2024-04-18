@@ -1,0 +1,80 @@
+version: '3.8'
+services:
+  parser-app:
+    container_name: parser-app
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    env_file:
+        - .env
+    environment:
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_DB=${MONGO_DB}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - parser-mongo
+    networks:
+      - crypto-parser-network
+
+  parser-nginx:
+    container_name: parser-nginx
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "80:80"
+    depends_on:
+      - parser-app
+      - parser-mongo-express
+    networks:
+      - crypto-parser-network
+
+  parser-mongo:
+    container_name: parser-mongo
+    image: mongo
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes: 
+      - mongo-data:/data/db
+    networks:
+      - crypto-parser-network
+
+
+  parser-mongo-express:
+    container_name: parser-mongo-express
+    image: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - ME_CONFIG_MONGODB_SERVER=parser-mongo
+      - ME_CONFIG_BASICAUTH_USERNAME=${ME_CONFIG_MONGODB_ADMINUSERNAME}
+      - ME_CONFIG_BASICAUTH_PASSWORD=${ME_CONFIG_MONGODB_ADMINPASSWORD}
+    depends_on:
+      - parser-mongo
+    networks:
+      - crypto-parser-network
+
+
+volumes:
+  mongo-data:
+
+networks:
+  crypto-parser-network:
+    driver: bridge
